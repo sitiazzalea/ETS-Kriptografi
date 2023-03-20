@@ -4,21 +4,24 @@
  */
 package TugasBesar;
 
+import java.math.*;
+import java.util.*;
+
 /**
  *
  * @author Zaza
  */
 //Untuk generate Key pair
 public class KeyPair {
-    
+
     private int p; //rahasia
-    
+
     private int q; //rahasia
-    
+
     private int e;
-    
+
     private int d; //rahasia
-    
+
 //    public KeyPair(List primeList) {
     public KeyPair() {
 //    buat prime generator antara 1000 s/d 9999, masukkan di ArrayList, aagr bisa langsung memilih secara acak 
@@ -27,11 +30,11 @@ public class KeyPair {
 //    hitung phi(n) = (p-1)(q-1)
 //    pilih kunci publik e yang relatif prima terhadap phi(n). (Kudu bikin algo generator coprime)
 //    bangkitkan kunci privat dengan persamaan e*d = 1 mod(phi(n)), di mana d = (1 + k(phi(n))) / n adalah integer
-    } 
-    
+    }
+
 //  untuk melihat public key
     public PublicKey getPublicKey() {
         return new PublicKey(e, p * q);
     }
-    
+
 }
