@@ -21,6 +21,29 @@ public class KeyPair {
     private int e;
 
     private int d; //rahasia
+    
+//fungsi isPrime dan PrimeList dibuat untuk membangkitkan bilangan prima
+    public static boolean isPrime(int number) {
+        boolean result = true;
+        int p = (int)Math.sqrt(number);		
+        for (int i = 2; i <= p; i++) {
+                if (number % i == 0) {
+                        result = false;
+                        break;
+                }
+        }
+        return result;
+    } 
+    
+    public static List<Integer> primeList(int lower, int upper, List<Integer> list){
+        for (int i = lower; i <= upper; i++){
+            if (isPrime (i)) {
+                list.add(i);
+            }
+        }
+        return list;
+    }
+
 
 //    public KeyPair(List primeList) {
     public KeyPair() {
