@@ -59,7 +59,6 @@ public class KeyPair {
         }
         return list;
     }
-
     
     public int randomPicker(int bound){
         SecureRandom rand = new SecureRandom();
@@ -70,7 +69,7 @@ public class KeyPair {
 //    public KeyPair(List getPrimes) {
     public KeyPair() {        
 //    buat prime generator antara 1000 s/d 9999, masukkan di ArrayList, agar bisa langsung memilih secara acak 
-        getPrimes(1000, 9999, primeList);
+        getPrimes(100, 999, primeList);
 //    generate random antara 0 s/d lst.size-1 untuk mendapatkan index p dan q
         this.p = primeList.get(randomPicker(primeList.size()));
         this.q = primeList.get(randomPicker(primeList.size()));
@@ -80,9 +79,16 @@ public class KeyPair {
         int totient = (p-1)*(q-1);
 //    pilih kunci publik e yang relatif prima terhadap phi(n). (Kudu bikin algo generator coprime)
         getRelativePrimes(totient, relativePrimeList); //relative prime generator
-        this.e = relativePrimeList.get(randomPicker(relativePrimeList.size()));//pick e from list of relative primes        
-//    bangkitkan kunci privat (d) dengan persamaan e*d = 1 mod(phi(n)), di mana [d = (1 + k(phi(n))) / e] adalah integer
+        this.e = relativePrimeList.get(randomPicker((int)10));//pick e from list of relative primes        
+//    bangkitkan kunci privat (d) dengan persamaan e*d = 1 mod(phi(n)), di mana [d = (1 + k(phi(n))) / e] adalah integer        
 //    pertama cari k
+        for (int k = 1; ; k++) {
+            if ((1 + k*totient) % e == 0) {
+                this.d = (1 + k*totient) / e;
+                break;
+            }
+        }
+        System.out.printf("n = %d x %d  = %d ,e = %d, d = %d, totient = %d\n",p,q, n, e, d, totient);
     } 
     
 //  untuk melihat public key
