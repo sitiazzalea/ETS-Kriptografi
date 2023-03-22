@@ -14,19 +14,19 @@ import java.util.List;
  * @author Zaza
  */
 //Untuk generate Key pair
-public class KeyPair {
+public class KeyPair extends PublicKey {
     
-    private int p; //rahasia
+    private long p; //rahasia
     
-    private int q; //rahasia
+    private long q; //rahasia
     
-    private int e;
+  //  private long e;  sudah ada dari kelas PublicKey
     
-    private int d; //rahasia
+    private long d; //rahasia
     
-    private boolean isPrime(int number) {
+    private boolean isPrime(long number) {
         boolean result = true;
-        int p = (int)Math.sqrt(number);		
+        long p = (long)Math.sqrt(number);		
         for (int i = 2; i <= p; i++) {
             if (number % i == 0) {
                 result = false;
@@ -36,9 +36,9 @@ public class KeyPair {
         return result;
     } 
     
-    private List<Integer> primeList = new ArrayList<>();
-    private List<Integer> getPrimes(int lower, int upper, List<Integer> list){
-        for (int i = lower; i <= upper; i++){
+    private List<Long> primeList = new ArrayList<>();
+    private List<Long> getPrimes(long lower, long upper, List<Long> list){
+        for (long i = lower; i <= upper; i++){
             if (isPrime (i)) {
                 list.add(i);
             }
@@ -46,13 +46,13 @@ public class KeyPair {
         return list;
     }
 
-    private boolean isRelativePrime(int a, int b) {        
+    private boolean isRelativePrime(long a, long b) {        
         return BigInteger.valueOf(a).gcd(BigInteger.valueOf(b)).equals(BigInteger.ONE);
     }
     
-    private List<Integer> relativePrimeList = new ArrayList<>();
-    private List<Integer> getRelativePrimes(int upper, List<Integer> list){
-        for (int i = 3; i < upper; i++){
+    private List<Long> relativePrimeList = new ArrayList<>();
+    private List<Long> getRelativePrimes(long upper, List<Long> list){
+        for (long i = 3; i < upper; i++){
             if (isRelativePrime (i, upper)) {
                 list.add(i);
             }
@@ -66,20 +66,26 @@ public class KeyPair {
     }
     
     
-//    public KeyPair(List getPrimes) {
     public KeyPair() {        
 //    buat prime generator antara 1000 s/d 9999, masukkan di ArrayList, agar bisa langsung memilih secara acak 
         getPrimes(100, 999, primeList);
+        
 //    generate random antara 0 s/d lst.size-1 untuk mendapatkan index p dan q
         this.p = primeList.get(randomPicker(primeList.size()));
         this.q = primeList.get(randomPicker(primeList.size()));
-//    hitung n = p * q
-        int n = p * q;
+        
+//    hitung n = p * q, n telah didefinisikan di super class PublicKey
+        n = p * q;
+        
 //    hitung phi(n) = (p-1)(q-1)
-        int totient = (p-1)*(q-1);
+        long totient = (p-1)*(q-1);
+        
 //    pilih kunci publik e yang relatif prima terhadap phi(n). (Kudu bikin algo generator coprime)
         getRelativePrimes(totient, relativePrimeList); //relative prime generator
-        this.e = relativePrimeList.get(randomPicker((int)10));//pick e from list of relative primes        
+        
+//    pilih e dari daftar relatf prima, dipilih 10 angka pertama agar nilai e tidak terlalu besar untuk perpangkatan 
+        this.e = relativePrimeList.get(randomPicker((int)10));//        
+        
 //    bangkitkan kunci privat (d) dengan persamaan e*d = 1 mod(phi(n)), di mana [d = (1 + k(phi(n))) / e] adalah integer        
 //    pertama cari k
         for (int k = 1; ; k++) {
@@ -88,12 +94,12 @@ public class KeyPair {
                 break;
             }
         }
+//      TODO: kudu dibuang, cuma buat testing
         System.out.printf("n = %d x %d  = %d ,e = %d, d = %d, totient = %d\n",p,q, n, e, d, totient);
     } 
-    
-//  untuk melihat public key
-    public PublicKey getPublicKey() {
-        return new PublicKey(e, p * q);
+   
+    public long decrypt(long cipherText) {
+        return (BigInteger.valueOf(cipherText).pow((int)d).mod(BigInteger.valueOf(n))).longValue();
     }
     
 }

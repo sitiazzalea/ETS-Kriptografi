@@ -4,27 +4,35 @@
  */
 package TugasBesar;
 
+import java.math.BigInteger;
+
 /**
  *
  * @author Zaza
  */
 public class PublicKey {
-    private int e;
+    protected long e;
     
-    private int n;    
+    protected long n; 
     
-    public PublicKey(int e, int n) {
+    public PublicKey() {}
+    
+    public PublicKey(long e, long n) {
         this.e = e;
         this.n = n;
     }    
     
-    public String getPublicKey() {
+    public String getPublicKeyString() {
         StringBuffer sb = new StringBuffer();
         sb.append("e: ");
         sb.append(e);
         sb.append(", n: ");
         sb.append(n);
         return sb.toString();
+    }
+    
+    public long encrypt(long plainText) {
+        return (BigInteger.valueOf(plainText).pow((int)e).mod(BigInteger.valueOf(n))).longValue();
     }
     
 }
