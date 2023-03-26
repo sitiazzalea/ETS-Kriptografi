@@ -1,6 +1,5 @@
 package TugasBesar;
 
-import TugasBesar.ClientHandler;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -19,7 +18,8 @@ public class Server {
                 Socket socket = serverSocket.accept(); //waiting clients to connect
                 System.out.println("A new client has connected!"); //client masuk
                 ClientHandler clientHandler = new ClientHandler(socket); // this class will be responsible for communicating
- 
+// 
+
 //              A thread is a sequence of instruction within a program that can be executed independently on other code
 //              Thread share a memory space
 //              When you launch an executable, it is running in a thread within a process

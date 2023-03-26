@@ -13,10 +13,6 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 
-/**
- *
- * @author Zulfi
- */
 public class ClientHandler implements Runnable {
 
     public static ArrayList<ClientHandler> clientHandlers = new ArrayList<>();
@@ -24,6 +20,8 @@ public class ClientHandler implements Runnable {
     private BufferedReader bufferedReader;
     private BufferedWriter bufferedWriter;
     private String clientUsername;
+    private String publicKeyUser;
+    private final String COMMAND_LIST_PUBLIC_KEY = "LIST_PUBLIC_KEY"; //buat nge-list public key semua user 
 
     public ClientHandler(Socket socket) {
         try {
@@ -31,6 +29,7 @@ public class ClientHandler implements Runnable {
             this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             this.clientUsername = bufferedReader.readLine();
+            this.publicKeyUser = bufferedReader.readLine();
             clientHandlers.add(this);
             broadcastMessage("SERVER: " + clientUsername + " has entered the chat!");
 //          TO DO: broadcast username and their public key
@@ -42,11 +41,30 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         String messageFromClient;
-
+        
         while (socket.isConnected()) {
             try {
                 messageFromClient = bufferedReader.readLine();
-//              TO DO: Sout the message
+                if (messageFromClient.equals(clientUsername + ":"+ COMMAND_LIST_PUBLIC_KEY)) {
+//                    System.out.println("LIST OF PUBLIC KEY");
+                    StringBuffer sb = new StringBuffer();
+                    sb.append("LIST OF PUBLIC KEY \n");
+                    for (ClientHandler clientHandler : clientHandlers){
+                        sb.append(clientHandler.clientUsername);
+                        sb.append(": ");
+                        sb.append(clientHandler.publicKeyUser);
+                        sb.append("\n");
+                    }
+                    System.out.println("testing");
+                    this.bufferedWriter.write(sb.toString());
+                    this.bufferedWriter.newLine();
+                    this.bufferedWriter.flush();
+                    
+                    continue; //supaya ga ke broadcast                    
+               }
+
+//              Sout the message to server (sebagai pembeda antara yang dienkripsi dan belum dienkripsi)
+                System.out.println("CLEAR MESSAGE: " + messageFromClient);
                 broadcastMessage(messageFromClient);
             } catch (IOException e) {
                 closeEverything(socket, bufferedReader, bufferedWriter);
@@ -54,10 +72,12 @@ public class ClientHandler implements Runnable {
             }
         }
     }
+    
+    
     public void broadcastMessage(String messageToSend){
         for (ClientHandler clientHandler : clientHandlers){
             try{
-                if(!clientHandler.clientUsername.equals(clientUsername)){
+                if (!clientHandler.clientUsername.equals(clientUsername)) { //biar ga ngirim ke diri sendiri
                     clientHandler.bufferedWriter.write(messageToSend);
                     clientHandler.bufferedWriter.newLine();
                     clientHandler.bufferedWriter.flush();
