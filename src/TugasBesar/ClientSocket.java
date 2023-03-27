@@ -6,14 +6,19 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.StringTokenizer;
 
 //print message user di console socket server (di server) - KELAR
 //ketika ada user mau masuk buat key pair (di client) - KELAR
 //define command to list all public key (PK)
 //- LIST_PUBLIC_KEY. Ketimbang meneruskan pesan ke yang lain, server hanya akan mengembalikan daftar PK ke orang yang meminta - KELAR
 //-- Artinya server harus menyimpan list of PK client (server-->ClientHandler), nambah ketika ada client yang connect - KELAR
-//define command to send encypted message ke user tertentu pakai PK si user tujuan
+//bikin map untuk nyimpan pasangan user dan pubkey di memori client - KELAR
+//print isi map untuk nge-list pasangan user dan pubkey - KELAR
+//define command to send encypted message ke user tertentu pakai PK si user tujuan 
 //- ENCRYPT(username, e, n, message)
 //-- si server cuma ngirim ke user tertentu
 //-- kalo yang ga dienkrip terkirim ke semua client
@@ -26,7 +31,47 @@ public class ClientSocket {
     private BufferedWriter bufferedWriter;
     private String username;
     private KeyPair keypair;
+    private Map<String, PublicKey> userPKMap = new HashMap<>();
+    private final String COMMAND_LIST_PUBLIC_KEY = "LIST_PUBLIC_KEY"; //buat nge-list public key semua user 
 
+    private void populateUserPKMap(String userPubKeys) {
+        userPKMap.clear();
+        StringTokenizer tokenizer = new StringTokenizer(userPubKeys.substring(COMMAND_LIST_PUBLIC_KEY.length()), "|");
+//      untuk mendapatkan pasangan nama dan pubkey(e, n)
+        while (tokenizer.hasMoreElements()) {
+            String individualPubKey = tokenizer.nextToken();
+//          memisahkan nama dan public key(e, n)
+            StringTokenizer secondToken = new StringTokenizer(individualPubKey, "=");
+            if (secondToken.countTokens() == 2) {
+                String username = secondToken.nextToken();
+                String e_n = secondToken.nextToken();
+//               memisahkan e dan n
+                StringTokenizer thirdToken = new StringTokenizer(e_n, ",");
+                if (thirdToken.countTokens() == 2) {
+                    String str_e = thirdToken.nextToken();
+                    int e = Integer.parseInt(str_e);
+                    String str_n = thirdToken.nextToken();
+                    int n = Integer.parseInt(str_n);
+                    userPKMap.put(username, new PublicKey(e, n));
+                }
+            }
+        }
+    }
+
+    private String printUserPKMap() {
+        StringBuilder sb = new StringBuilder();
+        for(Map.Entry<String, PublicKey> entry : userPKMap.entrySet()) {
+            PublicKey pk =  entry.getValue();
+            String username = entry.getKey();
+            sb.append(username);
+            sb.append(": ");
+            sb.append(pk.getPublicKeyString());
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+    
+    
     public ClientSocket(Socket socket, String username) {
         try {
             this.socket = socket;
@@ -72,8 +117,13 @@ public class ClientSocket {
 
                 while (socket.isConnected()) {
                     try {
-                        msgFromGroupChat = bufferedReader.readLine();// setelah ini panggil fungsi decrypt
-                        System.out.println(msgFromGroupChat);
+                        msgFromGroupChat = bufferedReader.readLine();
+                        if (msgFromGroupChat.contains(COMMAND_LIST_PUBLIC_KEY)) {
+                            populateUserPKMap(msgFromGroupChat);
+                            System.out.println(printUserPKMap());
+                        }
+                        else
+                            System.out.println(msgFromGroupChat);
                     } catch (IOException e) {
                         closeEverything(socket, bufferedReader, bufferedWriter);
                     }
