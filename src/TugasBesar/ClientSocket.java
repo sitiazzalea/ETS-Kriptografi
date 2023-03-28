@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -18,8 +19,8 @@ import java.util.StringTokenizer;
 //-- Artinya server harus menyimpan list of PK client (server-->ClientHandler), nambah ketika ada client yang connect - KELAR
 //bikin map untuk nyimpan pasangan user dan pubkey di memori client - KELAR
 //print isi map untuk nge-list pasangan user dan pubkey - KELAR
-//define command to send encypted message ke user tertentu pakai PK si user tujuan 
-//- ENCRYPT(username, e, n, message)
+//define command to send encypted message ke user tertentu pakai PK si user tujuan -KELAR
+//- ENCRYPT(username, e, n, message) -KELAR
 //-- si server cuma ngirim ke user tertentu
 //-- kalo yang ga dienkrip terkirim ke semua client
 //-- nanti si penerima akan otomatis decrypt(d,n, encryptedMessage)
@@ -33,7 +34,22 @@ public class ClientSocket {
     private KeyPair keypair;
     private Map<String, PublicKey> userPKMap = new HashMap<>();
     private final String COMMAND_LIST_PUBLIC_KEY = "LIST_PUBLIC_KEY"; //buat nge-list public key semua user 
+    private final String COMMAND_ENCRYPT = "ENCRYPT";
 
+     public static String convBin2Hex(byte[] data) {
+        StringBuilder result = new StringBuilder();
+        for (byte b : data) {
+            result.append(String.format("%02x", b));
+        }
+        return result.toString();       
+    }    
+
+    public byte[] longToBytes(long x) {
+        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+        buffer.putLong(x);
+        return buffer.array();
+    }
+     
     private void populateUserPKMap(String userPubKeys) {
         userPKMap.clear();
         StringTokenizer tokenizer = new StringTokenizer(userPubKeys.substring(COMMAND_LIST_PUBLIC_KEY.length()), "|");
@@ -71,6 +87,29 @@ public class ClientSocket {
         return sb.toString();
     }
     
+    private  String encrypt(String message) {
+        byte[] convertedCipherPesan;
+        int cmdLen = COMMAND_ENCRYPT.length();
+        int secondSpacePos = message.indexOf(" ", cmdLen +1);
+        String nama = message.substring(cmdLen + 1, secondSpacePos);
+        String plainText = message.substring(secondSpacePos + 1);
+        if (userPKMap.containsKey(nama)) {
+            PublicKey pk = userPKMap.get(nama);
+            byte[] convPesan = Kripto.convStr2Bin(plainText);
+            long[] cipherPesan = Kripto.encrypt(pk, convPesan);
+            convertedCipherPesan = new byte[cipherPesan.length * 8];
+            for (int i = 0; i < cipherPesan.length; i++) {
+                byte[] tmp = longToBytes(cipherPesan[i]);
+                for (int j = 0; j < tmp.length; j++) {
+                    convertedCipherPesan[i+j] = tmp[j];
+                }
+            }
+            return convBin2Hex(convertedCipherPesan);
+        }
+        else {
+            return "";
+        }
+    }
     
     public ClientSocket(Socket socket, String username) {
         try {
@@ -97,7 +136,10 @@ public class ClientSocket {
 
             Scanner scanner = new Scanner(System.in);
             while (socket.isConnected()) {
-                String messageToSend = scanner.nextLine();// di sini panggil fungsi encrypt
+                String messageToSend = scanner.nextLine();// di sini panggil fungsi encrypt 
+                if (messageToSend.contains(COMMAND_ENCRYPT)) {
+                    messageToSend = encrypt(messageToSend);
+                }
                 bufferedWriter.write(username + ":" + messageToSend);
                 bufferedWriter.newLine();
                 bufferedWriter.flush();
