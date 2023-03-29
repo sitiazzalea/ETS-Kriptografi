@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -36,7 +37,11 @@ public class ClientSocket {
     private final String COMMAND_LIST_PUBLIC_KEY = "LIST_PUBLIC_KEY"; //buat nge-list public key semua user 
     private final String COMMAND_ENCRYPT = "ENCRYPT";
 
-     public static String convBin2Hex(byte[] data) {
+    public static String convBin2Str(byte[] data) {
+        return new String(data) ;
+    }
+
+     public static String convBin2HexString(byte[] data) {
         StringBuilder result = new StringBuilder();
         for (byte b : data) {
             result.append(String.format("%02x", b));
@@ -44,10 +49,27 @@ public class ClientSocket {
         return result.toString();       
     }    
 
+    public static byte[] convHex2Bin(String message) {
+        byte[] arr = new byte[message.length()/2];
+        for (int i = 0; i < arr.length; i++) {
+            int index = i*2;
+            int value = Integer.parseInt(message.substring(index, index + 2), 16);
+            arr[i] = (byte)value;
+        }
+        return arr;
+    }
+    
     public byte[] longToBytes(long x) {
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         buffer.putLong(x);
         return buffer.array();
+    }
+    
+    public static long bytesToLong(byte[] bytes) {
+        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+        buffer.put(bytes);
+        buffer.flip();//need flip 
+        return buffer.getLong();
     }
      
     private void populateUserPKMap(String userPubKeys) {
@@ -101,14 +123,45 @@ public class ClientSocket {
             for (int i = 0; i < cipherPesan.length; i++) {
                 byte[] tmp = longToBytes(cipherPesan[i]);
                 for (int j = 0; j < tmp.length; j++) {
-                    convertedCipherPesan[i+j] = tmp[j];
+                    convertedCipherPesan[(i*Long.BYTES)+j] = tmp[j];
                 }
             }
-            return convBin2Hex(convertedCipherPesan);
+            return COMMAND_ENCRYPT + ":" + nama + ":" +convBin2HexString(convertedCipherPesan); //biar gmapang di-tokenize di server
         }
         else {
             return "";
         }
+    }
+
+    private String getSender(String message) {
+        StringTokenizer st = new StringTokenizer(message, ":");
+        return st.nextToken();
+    }
+
+    private String getCipherText(String message) {
+        StringTokenizer st = new StringTokenizer(message, ":");
+        String cipherText = "";
+        if (st.countTokens() == 4) { //you only expect 4 items putih:ENCRYPT:kiky:0000000000000000000000
+            String sender = st.nextToken();
+            String command = st.nextToken(":");
+            if (command.equals(COMMAND_ENCRYPT)) {
+                String nama = st.nextToken(":");                
+                cipherText = st.nextToken(":");
+            }
+        }
+        return cipherText;
+    }
+    
+    private String decrypt(String message) {
+        String cipherText = getCipherText(message);
+        byte[] cipherInByte = convHex2Bin(cipherText);
+        long[] cipherInLong = new long[cipherInByte.length / Long.BYTES];
+        for (int i = 0; i < cipherInLong.length; i++) {
+            byte[] temp = Arrays.copyOfRange(cipherInByte, i*Long.BYTES, (i*Long.BYTES) + Long.BYTES);
+            cipherInLong[i] = bytesToLong(temp);
+        }
+        byte[] decryptedTextinByte = Kripto.decrypt(keypair, cipherInLong);
+        return convBin2Str(decryptedTextinByte);
     }
     
     public ClientSocket(Socket socket, String username) {
@@ -163,6 +216,9 @@ public class ClientSocket {
                         if (msgFromGroupChat.contains(COMMAND_LIST_PUBLIC_KEY)) {
                             populateUserPKMap(msgFromGroupChat);
                             System.out.println(printUserPKMap());
+                        }
+                        else if (msgFromGroupChat.contains(COMMAND_ENCRYPT)) {
+                            System.out.println(getSender(msgFromGroupChat) + " sent encypted message: " + decrypt(msgFromGroupChat));
                         }
                         else
                             System.out.println(msgFromGroupChat);

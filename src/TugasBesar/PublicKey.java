@@ -24,9 +24,9 @@ public class PublicKey {
     
     public String getPublicKeyString() {
         StringBuffer sb = new StringBuffer();
-        sb.append("e: ");
+//        sb.append("e: ");
         sb.append(e);
-        sb.append(", n: ");
+        sb.append(",");
         sb.append(n);
         return sb.toString();
     }

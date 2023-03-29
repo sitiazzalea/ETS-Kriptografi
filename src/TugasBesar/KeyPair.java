@@ -24,7 +24,7 @@ public class KeyPair extends PublicKey {
     
     private long d; //rahasia
     
-    private boolean isPrime(long number) {
+    private boolean isPrime(long number) { //meriksa bilangan prima
         boolean result = true;
         long p = (long)Math.sqrt(number);		
         for (int i = 2; i <= p; i++) {
@@ -36,7 +36,7 @@ public class KeyPair extends PublicKey {
         return result;
     } 
     
-    private List<Long> primeList = new ArrayList<>();
+    private List<Long> primeList = new ArrayList<>();//array buat prima
     private List<Long> getPrimes(long lower, long upper, List<Long> list){
         for (long i = lower; i <= upper; i++){
             if (isPrime (i)) {
@@ -68,7 +68,7 @@ public class KeyPair extends PublicKey {
     
     public KeyPair() {        
 //    buat prime generator antara 1000 s/d 9999, masukkan di ArrayList, agar bisa langsung memilih secara acak 
-        getPrimes(100, 999, primeList);
+        getPrimes(10, 99, primeList);
         
 //    generate random antara 0 s/d lst.size-1 untuk mendapatkan index p dan q
         this.p = primeList.get(randomPicker(primeList.size()));
@@ -95,7 +95,7 @@ public class KeyPair extends PublicKey {
             }
         }
 //      TODO: kudu dibuang, cuma buat testing
-        System.out.printf("n = %d x %d  = %d ,e = %d, d = %d, totient = %d\n",p,q, n, e, d, totient);
+//        System.out.printf("n = %d x %d  = %d ,e = %d, d = %d, totient = %d\n",p,q, n, e, d, totient);
     } 
    
     public long decrypt(long cipherText) {

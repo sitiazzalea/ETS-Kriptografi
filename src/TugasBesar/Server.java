@@ -17,7 +17,7 @@ public class Server {
             while (!serverSocket.isClosed()) {  
                 Socket socket = serverSocket.accept(); //waiting clients to connect
                 System.out.println("A new client has connected!"); //client masuk
-                ClientHandler clientHandler = new ClientHandler(socket); // this class will be responsible for communicating
+                ClientRequestHandler clientHandler = new ClientRequestHandler(socket); // this class will be responsible for communicating
 // 
 
 //              A thread is a sequence of instruction within a program that can be executed independently on other code
