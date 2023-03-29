@@ -218,7 +218,7 @@ public class ClientSocket {
                             System.out.println(printUserPKMap());
                         }
                         else if (msgFromGroupChat.contains(COMMAND_ENCRYPT)) {
-                            System.out.println(getSender(msgFromGroupChat) + " sent encypted message: " + decrypt(msgFromGroupChat));
+                            System.out.println(getSender(msgFromGroupChat) + " sent private chat: " + decrypt(msgFromGroupChat));
                         }
                         else
                             System.out.println(msgFromGroupChat);
