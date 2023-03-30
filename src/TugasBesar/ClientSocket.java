@@ -37,6 +37,17 @@ public class ClientSocket {
     private final String COMMAND_LIST_PUBLIC_KEY = "LIST_PUBLIC_KEY"; //buat nge-list public key semua user 
     private final String COMMAND_ENCRYPT = "ENCRYPT";
 
+    public ClientSocket(Socket socket, String username) {
+        try {
+            this.socket = socket;
+            this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            this.username = username;
+            this.keypair = new KeyPair();//generate key pair here
+        } catch (IOException e) {
+            closeEverything(socket, bufferedReader, bufferedWriter);
+        }
+    }
     public static String convBin2Str(byte[] data) {
         return new String(data) ;
     }
@@ -164,18 +175,6 @@ public class ClientSocket {
         return convBin2Str(decryptedTextinByte);
     }
     
-    public ClientSocket(Socket socket, String username) {
-        try {
-            this.socket = socket;
-            this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-            this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            this.username = username;
-            this.keypair = new KeyPair();//generate key pair here
-        } catch (IOException e) {
-            closeEverything(socket, bufferedReader, bufferedWriter);
-        }
-    }
-
     public void sendMessage() {
         try {
 //          send username for the first time
