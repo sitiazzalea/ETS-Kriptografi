@@ -178,6 +178,8 @@ public class ClientSocket {
     public void sendMessage() {
         try {
 //          send username for the first time
+            System.out.println("To get PUBLIC KEY of other client: LIST_PUBLIC_KEY" );
+            System.out.println("To send message to specific user: ENCRYPT destination message" );
             bufferedWriter.write(username);
             bufferedWriter.newLine();
             bufferedWriter.flush();
